@@ -4,10 +4,7 @@
 #SingleInstance Force
 InstallKeybdHook() ; 直前のキー A_PriorKey を利用するため
 
-; AHKがショートカットを処理する際に、Windowsが「Alt単体押し」と誤認しないためのマスクキー
-A_MenuMaskKey := "vkE8"
-
-; IMEの関数をまとめた最小構成の例 (v2専用)
+; IME制御クラス
 class IME {
     /**
      * 現在フォーカスがあるコントロール、あるいはアクティブウィンドウのハンドルを返す
@@ -52,20 +49,32 @@ class IME {
     }
 }
 
-; Alt単体押しによるメニューバーへのフォーカスをvkE8でブロック
-~LAlt::Send "{Blind}{vkE8}"
-~RAlt::Send "{Blind}{vkE8}"
+; Down 時は余計なことをせず、物理的な Alt Down だけをアプリに伝える
+$LAlt::Send "{LAlt down}"
+$RAlt::Send "{RAlt down}"
 
 ; 左AltキーでIMEをOFFにする
-~LAlt up:: {
+LAlt up:: {
     if (A_PriorKey == "LAlt") {
+        ; Shiftキーを割り込んでメニューフォーカスを防止
+        ; WPFアプリが仮想キーを処理しなかったため副作用が少ないShiftキーを採用している
+        Send "{Blind}{LShift up}"
+
         IME.SetState(0) ; OFF
     }
+
+    Send "{LAlt up}"
 }
 
 ; 右AltキーでIMEをONにする
-~RAlt up:: {
+RAlt up:: {
     if (A_PriorKey == "RAlt") {
+        ; Shiftキーを割り込んでメニューフォーカスを防止
+        ; WPFアプリが仮想キーを処理しなかったため副作用が少ないShiftキーを採用している
+        Send "{Blind}{RShift up}"
+
         IME.SetState(1) ; ON
     }
+
+    Send "{RAlt up}"
 }
